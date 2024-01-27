@@ -188,21 +188,21 @@ void createLargeRecordDescriptor(vector<Attribute> &recordDescriptor)
     for(int i = 0; i < 10; i++)
     {
         Attribute attr;
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
         attr.name = "Char";
         attr.name += suffix;
         attr.type = TypeVarChar;
         attr.length = (AttrLength)50;
         recordDescriptor.push_back(attr);
 
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
         attr.name = "Int";
         attr.name += suffix;
         attr.type = TypeInt;
         attr.length = (AttrLength)4;
         recordDescriptor.push_back(attr);
 
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
         attr.name = "Real";
         attr.name += suffix;
         attr.type = TypeReal;
@@ -255,21 +255,21 @@ void createLargeRecordDescriptor2(vector<Attribute> &recordDescriptor) {
     char *suffix = (char *) malloc(10);
     for (int i = 0; i < 10; i++) {
         Attribute attr;
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
         attr.name = "Int";
         attr.name += suffix;
         attr.type = TypeInt;
         attr.length = (AttrLength) 4;
         recordDescriptor.push_back(attr);
 
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
         attr.name = "Real";
         attr.name += suffix;
         attr.type = TypeReal;
         attr.length = (AttrLength) 4;
         recordDescriptor.push_back(attr);
 
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
         attr.name = "Char";
         attr.name += suffix;
         attr.type = TypeVarChar;
