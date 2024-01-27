@@ -1,8 +1,8 @@
 1. Basic information
-Student ID : 
-Student Name : 
-OS (bit) :
-gcc version :
+Student ID : 00001651789
+Student Name : Sudarshan Mehta
+OS (bit) : Mac OS Sonoma 64-bit
+gcc version : Apple clang version 15.0.0 (clang-1500.1.0.2.5)
 
 
 2. Internal Record Format
