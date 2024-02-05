@@ -304,9 +304,7 @@ Record::Record(const vector<Attribute> &recordDescriptor, const void *data):fiel
 				memcpy(&real_field.real_value,(char*)data+offset,recordDescriptor[i].length);
 				offset += recordDescriptor[i].length;
 				field_size += recordDescriptor[i].length;
-//				cout << recordDescriptor[i].name << ":" << real_field.value << endl;
 				fields.push_back(real_field);
-//				free(&real_field);
 				break;
 			}
 			case TypeVarChar:
@@ -317,7 +315,7 @@ Record::Record(const vector<Attribute> &recordDescriptor, const void *data):fiel
 				memcpy(&attr_len,(char*)data+offset,4*sizeof(char));
 				varchar_field.attr.length = attr_len;
 				offset += 4*sizeof(char);
-				varchar_field.varchar_value = (char*)malloc(attr_len); // Why need a middle value?
+				varchar_field.varchar_value = (char*)malloc(attr_len);
 				memcpy(varchar_field.varchar_value,(char*)data+offset,attr_len);
 				offset += attr_len;
 				field_size += attr_len;
