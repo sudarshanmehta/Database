@@ -7,15 +7,55 @@ gcc version : Apple clang version 15.0.0 (clang-1500.1.0.2.5)
 
 2. Internal Record Format
 - Show your record format design and describe how your design satisfies O(1) field access. If not, just mention that you haven't implemented this feature.
+
+Record Format Design:
+
+- The record_Descriptor vector holds the metadata about each attribute in the record, such as its name, type, and length.
+- The fields vector contains the actual values of the fields in the record.
+- null_bit represents the number of bits required for the null indicator. Each bit corresponds to an attribute, indicating whether it is null or not.
+- null_indicator is an array storing the null indicator bits.
+- field_size keeps track of the total size occupied by non-null fields in the record.
+- total_size represents the overall size of the record, including the null indicator and fields.
+- encodeRecord and decodeRecord methods are responsible for converting the record to and from a buffer.
+- RID rid holds the record's ID.
+- buffer is a buffer used for encoding the record.
+
+Improvements : Linear access, have to do O(1) access, idea is to keep map<rid, field> instead of vector<fields>
+
 - Describe how you store a VarChar field.
+
+- The Field class serves as the base class for different types of fields and includes an Attribute object to store metadata about the field, such as its type, name, and length.
+- The VarCharField class, which is a subclass of Field, specifically handles VarChar fields.
+- The VarCharField class includes a char* varchar_value within a union. This char* points to the actual character data of the VarChar field.
+- The union allows the VarCharField to share memory with other types of fields (IntField and RealField). The union is used to store different types of values (integer, float, or character data) in the same memory location.
+- When storing a VarChar field, the actual character data is dynamically allocated on the heap using char* varchar_value.
+- The Attribute object within the Field class provides information about the VarChar field, such as its length.
 
 
 3. Page Format
+
 - Show your page format design
 
+- free_ptr: An integer indicating the offset where new records can be added. This is essentially the free space pointer within the page.
+- slot_directory: A vector of Slot objects, where each Slot contains information about the offset and length of a record within the page. This can be considered a form of page directory.
+- records: A vector of Record objects, representing the records stored in the page. Each Record object likely has its own structure, depending on the design of the Record class.
+- buffer: A character array or buffer where the entire page content is stored. The encodePage method likely populates this buffer based on the information stored in the free_ptr, records, and slot_directory.
 
 4. Implementation Detail
 - Other implementation details goes here.
+
+Insert Record logic:
+- Determines the current page directory and checks if a new page needs to be created.
+- Finds a suitable page with enough space for the record.
+- Inserts the record into the selected page and updates the page directory and file handle accordingly.
+
+Print Record logic:
+- Takes a set of attributes and data and prints the records based on the provided record descriptor.
+- Handles different data types such as integers, floats, and variable-length characters.
+
+Read Record logic:
+- Reads a record from the specified page and slot using the provided RID.
+- Decodes the record and fills the data buffer accordingly.
 
 
 5. Other (optional)
