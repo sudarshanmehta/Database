@@ -5,7 +5,7 @@
 #include <vector>
 #include <climits>
 
-#include "../rbf/pfm.h"
+#include "pfm.h"
 
 using namespace std;
 
