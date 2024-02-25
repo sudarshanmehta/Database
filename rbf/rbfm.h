@@ -1,6 +1,20 @@
 #ifndef _rbfm_h_
 #define _rbfm_h_
 
+#define INT_SIZE                4
+#define REAL_SIZE               4
+#define VARCHAR_LENGTH_SIZE     4
+
+#define RBFM_CREATE_FAILED  1
+#define RBFM_MALLOC_FAILED  2
+#define RBFM_OPEN_FAILED    3
+#define RBFM_APPEND_FAILED  4
+#define RBFM_READ_FAILED    5
+#define RBFM_WRITE_FAILED   6
+#define RBFM_SLOT_DN_EXIST  7
+#define RBFM_READ_AFTER_DEL 8
+#define RBFM_NO_SUCH_ATTR   9
+
 #include <string>
 #include <vector>
 #include <climits>
@@ -19,6 +33,7 @@ typedef struct
 
 // Attribute
 typedef enum { TypeInt = 0, TypeReal, TypeVarChar } AttrType;
+typedef enum { VALID = 0, MOVED, DEAD} SlotStatus;
 
 typedef unsigned AttrLength;
 
@@ -121,6 +136,30 @@ typedef enum { EQ_OP = 0, // no condition// =
 } CompOp;
 
 
+typedef struct SlotDirectoryHeader
+{
+    uint16_t freeSpaceOffset;
+    uint16_t recordEntriesNumber;
+} SlotDirectoryHeader;
+
+typedef struct SlotDirectoryRecordEntry
+{
+    uint32_t length; 
+    int32_t offset;
+} SlotDirectoryRecordEntry;
+
+
+typedef struct IndexedRecordEntry
+{
+    int32_t slotNum;
+    SlotDirectoryRecordEntry recordEntry;
+} IndexedRecordEntry;
+
+typedef SlotDirectoryRecordEntry* SlotDirectory;
+
+typedef uint16_t ColumnOffset;
+
+typedef uint16_t RecordLength;
 /********************************************************************************
 The scan iterator is NOT required to be implemented for the part 1 of the project 
 ********************************************************************************/
@@ -135,17 +174,58 @@ The scan iterator is NOT required to be implemented for the part 1 of the projec
 //    process the data;
 //  }
 //  rbfmScanIterator.close();
-
+class RecordBasedFileManager;
 class RBFM_ScanIterator {
 public:
-  RBFM_ScanIterator() {};
+  RBFM_ScanIterator();
   ~RBFM_ScanIterator() {};
 
   // Never keep the results in the memory. When getNextRecord() is called, 
   // a satisfying record needs to be fetched from the file.
   // "data" follows the same format as RecordBasedFileManager::insertRecord().
-  RC getNextRecord(RID &rid, void *data) { return RBFM_EOF; };
-  RC close() { return -1; };
+  RC getNextRecord(RID &rid, void *data);
+  RC close();
+
+  friend class RecordBasedFileManager;
+
+private:
+  RecordBasedFileManager *rbfm;
+
+  uint32_t currPage;
+  uint32_t currSlot;
+
+  uint32_t totalPage;
+  uint16_t totalSlot;
+
+  void *pageData;
+
+  AttrType type;
+  unsigned attrIndex;
+
+  FileHandle fileHandle;
+  vector<Attribute> recordDescriptor;
+  string conditionAttribute;
+  CompOp compOp;
+  const void* value;
+  vector<string> attributeNames;
+
+  vector<RID> skipList;
+
+  RC scanInit(FileHandle &fh,
+        const vector<Attribute> rd,
+        const string &ca, 
+        const CompOp compOp, 
+        const void *v, 
+        const vector<string> &an);
+
+  RC getNextSlot();
+  RC getNextPage();
+  RC handleMovedRecord(bool &status, const RID rid, void *data);
+  bool checkScanCondition();
+  RC checkScanCondition(bool &result, const RID rid);
+  bool checkScanCondition(int, CompOp, const void*);
+  bool checkScanCondition(float, CompOp, const void*);
+  bool checkScanCondition(char*, CompOp, const void*);
 };
 
 
@@ -213,9 +293,38 @@ protected:
   RecordBasedFileManager();
   ~RecordBasedFileManager();
 
+public:
+friend class RBFM_ScanIterator;
+
 private:
   static RecordBasedFileManager *_rbf_manager;
+
+
+  void newRecordBasedPage(void * page);
+
+  SlotDirectoryHeader getSlotDirectoryHeader(void * page);
+  void setSlotDirectoryHeader(void * page, SlotDirectoryHeader slotHeader);
+
+  SlotDirectoryRecordEntry getSlotDirectoryRecordEntry(void * page, unsigned recordEntryNumber);
+  void setSlotDirectoryRecordEntry(void * page, unsigned recordEntryNumber, SlotDirectoryRecordEntry recordEntry);
+
+  unsigned getPageFreeSpaceSize(void * page);
+  unsigned getRecordSize(const vector<Attribute> &recordDescriptor, const void *data);
+
+  int getNullIndicatorSize(int fieldCount);
+  bool fieldIsNull(char *nullIndicator, int i);
+
+  void setRecordAtOffset(void *page, unsigned offset, const vector<Attribute> &recordDescriptor, const void *data);
+  void getRecordAtOffset(void *record, int32_t offset, const vector<Attribute> &recordDescriptor, void *data);
+
+  SlotStatus getSlotStatus (SlotDirectoryRecordEntry slot);
+  unsigned getOpenSlot(void *page);
+
+  void markSlotDeleted(void *page, unsigned i);
+
+  void reorganizePage(void *page);
+
+  void getAttributeFromRecord(void *page, unsigned offset, unsigned attrIndex, AttrType type,void *data);
+
 };
-
-
 #endif

@@ -337,7 +337,7 @@ RC createLargeTable(const string &tableName)
     for(int i = 0; i < 10; i++)
     {
         Attribute attr;
-        sprintf(suffix, "%d", index);
+        printf(suffix, "%d", index);
         attr.name = "attr";
         attr.name += suffix;
         attr.type = TypeVarChar;
@@ -345,7 +345,7 @@ RC createLargeTable(const string &tableName)
         attrs.push_back(attr);
         index++;
 
-        sprintf(suffix, "%d", index);
+        printf(suffix, "%d", index);
         attr.name = "attr";
         attr.name += suffix;
         attr.type = TypeInt;
@@ -353,7 +353,7 @@ RC createLargeTable(const string &tableName)
         attrs.push_back(attr);
         index++;
 
-        sprintf(suffix, "%d", index);
+        printf(suffix, "%d", index);
         attr.name = "attr";
         attr.name += suffix;
         attr.type = TypeReal;

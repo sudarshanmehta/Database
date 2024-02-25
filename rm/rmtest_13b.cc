@@ -45,7 +45,7 @@ RC TEST_RM_13b(const string &tableName)
 
         age = (rand()%20) + 15;
 
-        sprintf(suffix, "%d", i);
+        printf(suffix, "%d", i);
 
 		if (i % 10 == 0) {
 			tupleName = "TesterNull";

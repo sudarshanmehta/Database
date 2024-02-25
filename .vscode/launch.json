@@ -1,26 +1,18 @@
 {
-    "version": "0.2.0",
     "configurations": [
         {
-            "name": "C/C++: clang++ build active file",
+            "name": "C/C++: clang++ build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/Users/sudarshan/development/COEN380-W24-G4/rbf/rbftest6",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
             "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "stopAtEntry": true,
+            "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "/usr/bin/gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ],
+            "MIMode": "lldb",
             "preLaunchTask": "C/C++: clang++ build active file"
         }
-    ]
+    ],
+    "version": "2.0.0"
 }
