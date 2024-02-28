@@ -856,14 +856,85 @@ RC RM_ScanIterator::close()
     return SUCCESS;
 }
 
-// Extra credit
-RC RelationManager::dropAttribute(const string &tableName, const string &attributeName)
-{
-    return -1;
+// Extra credit work (10 points)
+RC RelationManager::addAttribute(const string &tableName, const Attribute &attr) {
+    // Check if the table exists
+    int32_t tableID;
+    if (getTableID(tableName, tableID) != SUCCESS) {
+        return -1;
+    }
+
+    // Check if the attribute already exists
+    vector<Attribute> existingAttrs;
+    if (getAttributes(tableName, existingAttrs) != SUCCESS) {
+        return -1;
+    }
+    for (const auto &existingAttr : existingAttrs) {
+        if (existingAttr.name == attr.name) {
+            return -1;
+        }
+    }
+
+    // Add the attribute to the system catalogs
+    if (insertColumns(tableID, {attr}) != SUCCESS) {
+        return -1;
+    }
+
+    return SUCCESS;
 }
 
-// Extra credit
-RC RelationManager::addAttribute(const string &tableName, const Attribute &attr)
-{
-    return -1;
+RC RelationManager::dropAttribute(const string &tableName, const string &attributeName) {
+ 
+    // Open the Columns file
+     RecordBasedFileManager *rbfm = RecordBasedFileManager::instance();
+    FileHandle columnsFileHandle;
+    if (rbfm->openFile(COLUMNS_TABLE_NAME + std::string(TABLE_FILE_EXTENSION), columnsFileHandle) != SUCCESS)
+        return -1;
+
+    // Get the table ID
+    int32_t tableID;
+    if (getTableID(tableName, tableID) != SUCCESS) {
+        rbfm->closeFile(columnsFileHandle);
+        return -1;
+    }
+
+    // Scan the Columns table to find the attribute to be dropped
+    RM_ScanIterator rmScanIterator;
+    vector<string> attributeNames;
+    attributeNames.push_back(COLUMNS_COL_COLUMN_NAME);
+    if (scan(COLUMNS_TABLE_NAME, COLUMNS_COL_TABLE_ID, EQ_OP, &tableID, attributeNames, rmScanIterator) != SUCCESS) {
+        rbfm->closeFile(columnsFileHandle);
+        return -1;
+    }
+
+    RID rid;
+    void *data = malloc(COLUMNS_RECORD_DATA_SIZE);
+    bool found = false;
+    while (rmScanIterator.getNextTuple(rid, data) != RM_EOF) {
+        string columnName;
+        fromAPI(columnName, data);
+        if (columnName == attributeName) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        free(data);
+        rbfm->closeFile(columnsFileHandle);
+        return -1;
+    }
+
+    // Delete the attribute record
+    if (rbfm->deleteRecord(columnsFileHandle, columnDescriptor, rid) != SUCCESS) {
+        free(data);
+        rbfm->closeFile(columnsFileHandle);
+        return -1;
+    }
+
+    // Close the files
+    free(data);
+    rbfm->closeFile(columnsFileHandle);
+
+    return SUCCESS;
 }
