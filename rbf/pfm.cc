@@ -26,7 +26,6 @@ PagedFileManager::~PagedFileManager()
 {
 }
 
-
 RC PagedFileManager::createFile(const string &fileName)
 {
     // If the file already exists, error
@@ -39,10 +38,9 @@ RC PagedFileManager::createFile(const string &fileName)
     if (pFile == NULL)
         return PFM_OPEN_FAILED;
 
-    fclose (pFile);
+    fclose(pFile);
     return SUCCESS;
 }
-
 
 RC PagedFileManager::destroyFile(const string &fileName)
 {
@@ -52,7 +50,6 @@ RC PagedFileManager::destroyFile(const string &fileName)
 
     return SUCCESS;
 }
-
 
 RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
 {
@@ -76,14 +73,13 @@ RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
     return SUCCESS;
 }
 
-
 RC PagedFileManager::closeFile(FileHandle &fileHandle)
 {
     FILE *pFile = fileHandle.getfd();
 
     // If not an open file, error
     if (pFile == NULL)
-        return 1;
+        return PFM_FILE_NOT_OPEN;
 
     // Flush and close the file
     fclose(pFile);
@@ -101,7 +97,6 @@ bool PagedFileManager::fileExists(const string &fileName)
     return stat(fileName.c_str(), &sb) == 0;
 }
 
-
 FileHandle::FileHandle()
 {
     readPageCounter = 0;
@@ -111,20 +106,18 @@ FileHandle::FileHandle()
     _fd = NULL;
 }
 
-
 FileHandle::~FileHandle()
 {
 }
 
-
 RC FileHandle::readPage(PageNum pageNum, void *data)
 {
     // If pageNum doesn't exist, error
-    if (getNumberOfPages() < pageNum)
+    if (getNumberOfPages() <= pageNum)
         return FH_PAGE_DN_EXIST;
 
     // Try to seek to the specified page
-    if (fseek(_fd, PAGE_SIZE * pageNum, SEEK_SET))
+    if (fseek(_fd, PAGE_SIZE * pageNum, SEEK_SET) != 0)
         return FH_SEEK_FAILED;
 
     // Try to read the specified page
@@ -135,15 +128,14 @@ RC FileHandle::readPage(PageNum pageNum, void *data)
     return SUCCESS;
 }
 
-
 RC FileHandle::writePage(PageNum pageNum, const void *data)
 {
     // Check if the page exists
-    if (getNumberOfPages() < pageNum)
+    if (getNumberOfPages() <= pageNum)
         return FH_PAGE_DN_EXIST;
 
     // Seek to the start of the page
-    if (fseek(_fd, PAGE_SIZE * pageNum, SEEK_SET))
+    if (fseek(_fd, PAGE_SIZE * pageNum, SEEK_SET) != 0)
         return FH_SEEK_FAILED;
 
     // Write the page
@@ -158,11 +150,10 @@ RC FileHandle::writePage(PageNum pageNum, const void *data)
     return FH_WRITE_FAILED;
 }
 
-
 RC FileHandle::appendPage(const void *data)
 {
     // Seek to the end of the file
-    if (fseek(_fd, 0, SEEK_END))
+    if (fseek(_fd, 0, SEEK_END) != 0)
         return FH_SEEK_FAILED;
 
     // Write the new page
@@ -175,7 +166,6 @@ RC FileHandle::appendPage(const void *data)
     return FH_WRITE_FAILED;
 }
 
-
 unsigned FileHandle::getNumberOfPages()
 {
     // Use stat to get the file size
@@ -186,7 +176,6 @@ unsigned FileHandle::getNumberOfPages()
     // Filesize is always PAGE_SIZE * number of pages
     return sb.st_size / PAGE_SIZE;
 }
-
 
 RC FileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount)
 {
