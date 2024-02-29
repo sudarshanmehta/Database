@@ -6,34 +6,36 @@
 
 2. Meta-data:
    - Tables Table:
-     - `table-id` (Integer): Unique identifier for each table.
-     - `table-name` (VarChar(50)): Name of the table.
-     - `file-name` (VarChar(50)): Name of the file associated with the table.
-     - `system` (Integer): Flag indicating if the table is a system table (1 if system table, 0 otherwise).
+     - Columns:
+       - `table_id`: INT
+       - `table_name`: VARCHAR(50)
+       - `file_name`: VARCHAR(50)
+       - `system`: INT
    - Columns Table:
-     - `table-id` (Integer): Foreign key referencing `table-id` from the Tables table.
-     - `column-name` (VarChar(50)): Name of the column.
-     - `column-type` (Integer): Type of the column (0 for Int, 1 for Real, 2 for VarChar).
-     - `column-length` (Integer): Length of the column.
-     - `column-position` (Integer): Position of the column in the table schema.
+     - Columns:
+       - `table_id`: INT
+       - `column_name`: VARCHAR(50)
+       - `column_type`: INT
+       - `column_length`: INT
+       - `column_position`: INT
 
 3. Internal Record Format:
-   - The record format design follows a fixed-length representation with a null indicator at the beginning to handle null values efficiently.
-   - VarChar fields are stored with a 4-byte integer representing the length of the string followed by the actual characters.
-   - Update and delete operations are handled by marking the record as deleted and maintaining a slot directory to manage free space on the page.
+   - The design employs a straightforward format where each field is stored sequentially in memory within the record. This structure ensures O(1) field access as the offset for each field is pre-computed based on the field's position in the record.
+   - VarChar Field Storage: VarChar fields are stored with a 4-byte integer prefix indicating the length of the string followed by the actual string data. This format allows efficient retrieval and storage of variable-length string data.
+   - Update and Delete Handling: Updates are performed by directly modifying the record data in place. Deletes are handled by marking the record as deleted or by physically removing it from the page/file and updating the relevant metadata accordingly.
 
 4. Page Format:
-   - The page format design includes a header containing metadata like the free space offset and the number of records.
-   - Update and delete operations are managed by marking the record as deleted and updating the slot directory accordingly.
+   - The page format consists of a fixed-size array of bytes (PAGE_SIZE) to store data records. Each record is stored contiguously within the page, and the page header contains metadata such as the number of records and their offsets within the page.
+   - Update and Delete Handling: Updates to records on a page are handled by overwriting the existing record data with the new data. Deletes may involve shifting records to fill the gap left by the deleted record or marking the record as deleted without physically removing it.
 
 5. File Format:
-   - The file format design follows a simple structure where pages are sequentially written to the file.
+   - The file format follows a simple structure where pages are appended sequentially within the file. Each page contains a fixed-size array of bytes to store record data along with a page header containing metadata.
+   - The file format allows for efficient storage and retrieval of data records while supporting operations like updates and deletes at the page level.
 
 6. Implementation Detail:
-   - The implementation handles system catalog tables (`Tables` and `Columns`) separately from user-defined tables.
-   - Concurrency control mechanisms, such as locking or versioning, are implemented to ensure data consistency in a multi-user environment.
-   - Buffer management techniques are employed to optimize I/O operations and reduce disk accesses.
-   - Logging and recovery mechanisms are implemented to ensure durability and atomicity of transactions.
+   - Field Access Optimization: Utilizing pre-computed offsets for fields in records ensures O(1) field access time.
+   - Error Handling: Comprehensive error handling mechanisms are implemented throughout the codebase to handle various failure scenarios gracefully.
+   - Resource Management: Proper resource management techniques are employed to prevent memory leaks and resource contention, ensuring robust and efficient operation of the file and record managers.
 
 7. Other (optional):
    - The implementation focuses on efficiency and scalability, allowing the database system to handle large datasets and concurrent access efficiently.
